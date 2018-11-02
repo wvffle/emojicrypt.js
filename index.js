@@ -7,8 +7,8 @@
   const table = '😀 😁 😂 🤣 😃 😄 😅 😆 😉 😊 😋 😎 😍 😘 🥰 😗 😙 😚 🙂 🤗 🤩 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 😴 😌 😛 😜 😝 🤤 😒 😓 😔 😕 🙃 🤑 😲 🙁 😖 😞 😟 😤 😢 😭 😦 😧 😨 😩 🤯 😬 😰 😱 🥵 🥶 😳 🤪 😵 😡 😠 🤬 😷 🤒 🤕 🤢 🤮 🤧 😇 🤠 🤡 🥳 🥴 🥺 🤥 🤫 🤭 🧐 🤓 😈 👿 👹 👺 💀 👻 👽 🤖 💩 😺 😸 😹 😻 😼 😽 🙀 😿 😾'.split(' ')
 
   const emojicrypt = {
-    encrypt (str, startIndex) {
-      const base = toBase(str.replace(/[^\0-~]/g, ch => "%u" + ("000" + ch.charCodeAt().toString(16)).slice(-4) ))
+    encrypt (str = '', startIndex) {
+      const base = toBase(str.toString().replace(/[^\0-~]/g, ch => "%u" + ("000" + ch.charCodeAt().toString(16)).slice(-4) ))
       if (startIndex < 0) {
         startIndex = 0
       }
@@ -30,9 +30,9 @@
         return res ? res : i
       })
     },
-    decrypt (str) {
+    decrypt (str = '💩') {
       const startIndex = table.indexOf(str.slice(0, 2))
-      const base = str.slice(2, str.length).replace(/../g, e => {
+      const base = str.toString().slice(2, str.toString().length).replace(/../g, e => {
         let i = table.indexOf(e) + 43 - startIndex
         if (i < 43) i += table.length
         return String.fromCharCode(i)
