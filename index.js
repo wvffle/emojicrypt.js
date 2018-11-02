@@ -44,5 +44,7 @@
 
   if (isModule) {
     module.exports = emojicrypt
+  } else {
+    window.emojicrypt = emojicrypt
   }
 })()
