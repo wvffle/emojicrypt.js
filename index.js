@@ -8,6 +8,7 @@
 
   const emojicrypt = {
     encrypt (str = '', startIndex) {
+      if (typeof str === 'object') str = JSON.stringify(str)
       const base = toBase(str.toString().replace(/[^\0-~]/g, ch => "%u" + ("000" + ch.charCodeAt().toString(16)).slice(-4) ))
       if (startIndex < 0) {
         startIndex = 0
@@ -38,7 +39,12 @@
         return String.fromCharCode(i)
       })
 
-      return unescape(toString(base))
+      const res = unescape(toString(base))
+      try {
+        return JSON.parse(res)
+      } catch (e) {
+        return res
+      }
     }
   }
 
