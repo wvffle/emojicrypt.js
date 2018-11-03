@@ -1,7 +1,7 @@
 {
   "name": "emojicrypt.js",
   "description": "emojicrypt.js (with 💩 support)",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "index.js",
   "license": "MIT",
   "author": "Kasper Seweryn <casper@wvffle.net>",
