@@ -65,8 +65,8 @@
       if (visualCompression !== false) {
         visualCompression -= 1
 
-        if (visualCompression < 2) {
-          visualCompression = 2
+        if (visualCompression < 1) {
+          visualCompression = 1
         }
 
         visualCompression ^= 0
