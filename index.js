@@ -18,10 +18,31 @@
     "🤙", "🖕", "🦊", "🐼", "🐺", "🐗", "🦄", "💎", "🧡", "💛", "💚", "💙", "💜",
   ]
 
-  const ZWNJ = unescape('%u200c')
+  const ZWNJ = unescape('%u200c') // 0 width non-joiner
+
+  // Visual compression
+  const VC = {
+    map: [
+      unescape('%u200b'), // 0 width space
+      unescape('%u200d'), // 0 width joiner
+    ],
+    compress (c) {
+      const binary = c.toString(2)
+
+      return binary.replace(/./g, bit => VC.map[bit])
+    },
+    decompress (cs) {
+      let binary = ''
+      for (const char of cs) {
+        binary += VC.map.indexOf(char)
+      }
+
+      return String.fromCharCode(parseInt(binary, 2))
+    }
+  }
 
   const emojicrypt = {
-    encrypt (str = '', startIndex) {
+    encrypt (str = '', startIndex = 0, visualCompression = false) {
       if (typeof str === 'object') str = JSON.stringify(str)
       const base = toBase(str.toString().replace(/[^\0-~]/g, ch => "%u" + ("000" + ch.charCodeAt().toString(16)).slice(-4) ))
       if (startIndex < 0) {
@@ -38,9 +59,36 @@
 
       startIndex ^= 0
 
-      return table[startIndex] + ZWNJ + base.replace(/./g, c  => {
+      let chars = 1
+      let res = table[startIndex] + ZWNJ
+
+      if (visualCompression !== false) {
+        visualCompression -= 1
+
+        if (visualCompression < 2) {
+          visualCompression = 2
+        }
+
+        visualCompression ^= 0
+
+        const start = base.slice(0, -visualCompression)
+        const end = base.slice(base.length - visualCompression, base.length)
+
+        return res + start.replace(/./g, c => {
+          return VC.compress(c.charCodeAt(0)) + ZWNJ
+        }) + end.replace(/./g, c  => {
+          let i = c.charCodeAt(0) - 43 + startIndex
+          if (i >= table.length) i -= table.length
+
+          const res = table[i]
+          return (res ? res : i) + ZWNJ
+        }).slice(0, -1)
+      }
+
+      return res + base.replace(/./g, c  => {
         let i = c.charCodeAt(0) - 43 + startIndex
         if (i >= table.length) i -= table.length
+
         const res = table[i]
         return (res ? res : i) + ZWNJ
       }).slice(0, -1)
@@ -55,6 +103,16 @@
       }
 
       const base = emojis.map(e => {
+        if (VC.map.includes(e[0])) {
+          const char = VC.decompress(e)
+
+          if (debug) {
+            console.debug(`Changing ${e.split('').map(c => VC.map.indexOf(c)).join('')} -> ${char}}`)
+          }
+
+          return char
+        }
+
         let i = table.indexOf(e) + 43 - startIndex
         if (i < 43) i += table.length
 
@@ -80,11 +138,11 @@
         return res
       }
     },
-    _test () {
+    _test (compression = false) {
       let pass = true
       for (let i = 0; i < 10000; ++i) {
       	const str = Math.random() + ''
-        const enc = emojicrypt.encrypt(str)
+        const enc = emojicrypt.encrypt(str, undefined, compression)
         try {
           const dec = emojicrypt.decrypt(enc)
           if (dec != str) {
