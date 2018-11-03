@@ -6,6 +6,8 @@
 
   const table = '😀 😁 😂 🤣 😃 😄 😅 😆 😉 😊 😋 😎 😍 😘 🥰 😗 😙 😚 🙂 🤗 🤩 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 😴 😌 😛 😜 😝 🤤 😒 😓 😔 😕 🙃 🤑 😲 🙁 😖 😞 😟 😤 😢 😭 😦 😧 😨 😩 🤯 😬 😰 😱 🥵 🥶 😳 🤪 😵 😡 😠 🤬 😷 🤒 🤕 🤢 🤮 🤧 😇 🤠 🤡 🥳 🥴 🥺 🤥 🤫 🤭 🧐 🤓 😈 👿 👹 👺 💀 👻 👽 🤖 💩 😺 😸 😹 😻 😼 😽 🙀 😿 😾'.split(' ')
 
+  const ZWNJ = unescape('%u200c')
+
   const emojicrypt = {
     encrypt (str = '', startIndex) {
       if (typeof str === 'object') str = JSON.stringify(str)
@@ -24,28 +26,72 @@
 
       startIndex ^= 0
 
-      return table[startIndex] + base.replace(/./g, c  => {
+      return table[startIndex] + ZWNJ + base.replace(/./g, c  => {
         let i = c.charCodeAt(0) - 43 + startIndex
         if (i >= table.length) i -= table.length
         const res = table[i]
-        return res ? res : i
-      })
+        return (res ? res : i) + ZWNJ
+      }).slice(0, -1)
     },
-    decrypt (str = '💩') {
-      const startIndex = table.indexOf(str.slice(0, 2))
-      const base = str.toString().slice(2, str.toString().length).replace(/../g, e => {
+    decrypt (str = '💩', debug = false) {
+      const emojis = str.split(ZWNJ)
+      const start = emojis.shift()
+      const startIndex = table.indexOf(start)
+
+      if (debug) {
+        console.debug(`Start index: ${startIndex} (${start})`)
+      }
+
+      const base = emojis.map(e => {
         let i = table.indexOf(e) + 43 - startIndex
         if (i < 43) i += table.length
+
+        if (debug) {
+          console.debug(`Changing ${e} -> ${i} -> ${String.fromCharCode(i)}`)
+        }
+
         return String.fromCharCode(i)
-      })
+      }).join('')
+
+
+      if (debug) {
+        console.debug(`Base64: ${base}`)
+      }
 
       const res = unescape(toString(base))
+      if (debug) {
+        console.debug(`Decoded: ${res}`)
+      }
       try {
         return JSON.parse(res)
       } catch (e) {
         return res
       }
+    },
+    _test () {
+      let pass = true
+      for (let i = 0; i < 10000; ++i) {
+      	const str = Math.random() + ''
+        const enc = emojicrypt.encrypt(str)
+        try {
+          const dec = emojicrypt.decrypt(enc)
+          if (dec != str) {
+            throw new Error('src/dec mismatch: ' + str + ' / ' + dec)
+          }
+        } catch (e) {
+          console.error(i + ': ' + enc)
+          console.error(e)
+          try {
+            emojicrypt.decrypt(enc, true)
+          } catch (e) {}
+          pass = false
+          break;
+        }
+      }
+
+      return pass
     }
+
   }
 
   if (isModule) {
