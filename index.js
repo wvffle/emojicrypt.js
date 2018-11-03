@@ -68,6 +68,30 @@
         return res
       }
     },
+    _test () {
+      let pass = true
+      for (let i = 0; i < 10000; ++i) {
+      	const str = Math.random() + ''
+        const enc = emojicrypt.encrypt(str)
+        try {
+          const dec = emojicrypt.decrypt(enc)
+          if (dec != str) {
+            throw new Error('src/dec mismatch: ' + str + ' / ' + dec)
+          }
+        } catch (e) {
+          console.error(i + ': ' + enc)
+          console.error(e)
+          try {
+            emojicrypt.decrypt(enc, true)
+          } catch (e) {}
+          pass = false
+          break;
+        }
+      }
+
+      return pass
+    }
+
   }
 
   if (isModule) {
