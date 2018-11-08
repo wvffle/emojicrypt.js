@@ -3,6 +3,7 @@
   "description": "emojicrypt.js (with 💩 support)",
   "version": "1.4.0",
   "main": "src/index.js",
+  "browser": "dist/emojicrypt.js"
   "license": "MIT",
   "author": "Kasper Seweryn <casper@wvffle.net>",
   "repository": "https://github.com/wvffle/emojicrypt.js",
